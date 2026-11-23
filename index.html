@@ -38,7 +38,7 @@
 
     .wrap { width: min(1320px, calc(100% - 64px)); margin-inline: auto; }
     .site-bar { background: #fafcf9; border-bottom: 1px solid var(--line); }
-    .site-bar .wrap { min-height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .site-bar .wrap { min-height: 60px; display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 16px; }
     .brand { display: inline-flex; gap: 10px; align-items: center; font-size: 1.0625rem; font-weight: 740; letter-spacing: -.02em; }
     .brand-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--forest); color: #cbf0d8; display: grid; place-items: center; }
     .globe { display: block; position: relative; width: 17px; height: 17px; border: 1.4px solid currentColor; border-radius: 50%; }
@@ -46,6 +46,14 @@
     .globe::after { content: ""; position: absolute; top: calc(50% - .7px); inset-inline: 0; border-top: 1.4px solid currentColor; }
     .snapshot { color: var(--muted); font-size: .875rem; }
     .snapshot time { margin-left: .45em; font: .875rem var(--mono); color: var(--ink); white-space: nowrap; }
+    .repo-link {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      color: var(--accent);
+    }
+    .repo-link:hover { color: var(--forest); }
 
     main { padding-block: 28px 40px; }
     .overview {
@@ -127,7 +135,6 @@
     select { appearance: none; padding: 0 31px 0 10px; font-size: .875rem; }
     .filter { flex: 0 1 135px; }
     .filter-traffic { flex-basis: 155px; }
-    .filter-source { flex-basis: 147px; }
     .control-button {
       min-height: 40px;
       border: 1px solid var(--strong-line);
@@ -311,7 +318,7 @@
       .overview { grid-template-columns: 1fr 1fr; row-gap: 17px; }
       .metrics { justify-content: flex-end; padding: 0; }
       .distribution { grid-column: 1 / -1; border-left: 0; border-top: 1px solid #537466; padding: 12px 0 0; }
-      .controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; }
+      .controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
       .search-field { grid-column: 1 / -1; }
       .scroll-hint { display: block; }
       .record-row > td:first-child, th:first-child {
@@ -329,6 +336,14 @@
       .col-month { width: 12%; }
       .col-status { width: 13%; }
     }
+    @media (max-width: 520px) {
+      .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 400px) {
+      .site-bar .wrap { grid-template-columns: 1fr auto; row-gap: 0; padding-block: 4px 9px; }
+      .site-bar .snapshot { grid-column: 1 / -1; grid-row: 2; justify-self: end; }
+      .repo-link { grid-column: 2; grid-row: 1; }
+    }
   </style>
 </head>
 <body>
@@ -336,6 +351,11 @@
     <div class="wrap">
       <div class="brand"><span class="brand-mark" aria-hidden="true"><span class="globe"></span></span>PubSpy</div>
       <span class="snapshot">数据快照 <time datetime="2026-11-20">2026-11-20</time></span>
+      <a class="repo-link" href="https://github.com/mundane799699/pubspy-domains" aria-label="GitHub 仓库">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+          <path d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"/>
+        </svg>
+      </a>
     </div>
   </header>
   <main class="wrap">
@@ -366,8 +386,22 @@
           <div class="select-box"><select id="suffix"><option value="">全部后缀</option></select></div>
         </div>
         <div class="field filter">
-          <label for="status">更新状态</label>
-          <div class="select-box"><select id="status"><option value="">全部状态</option></select></div>
+          <label for="registration-period">注册日期</label>
+          <div class="select-box">
+            <select id="registration-period">
+              <option value="">全部日期</option>
+              <optgroup label="注册时间范围">
+                <option value="1">1 个月内</option>
+                <option value="2">2 个月内</option>
+                <option value="3">3 个月内</option>
+                <option value="6">半年内</option>
+                <option value="12">1 年内</option>
+                <option value="24">2 年内</option>
+                <option value="36">3 年内</option>
+                <option value="60">5 年内</option>
+              </optgroup>
+            </select>
+          </div>
         </div>
         <div class="field filter filter-traffic">
           <label for="traffic">月流量等级</label>
@@ -384,10 +418,6 @@
               </optgroup>
             </select>
           </div>
-        </div>
-        <div class="field filter filter-source">
-          <label for="source">来源</label>
-          <div class="select-box"><select id="source"><option value="">全部来源</option></select></div>
         </div>
         <button type="reset" id="reset" class="control-button" disabled>清除筛选</button>
       </form>
@@ -462,7 +492,6 @@
       const format = new Intl.NumberFormat("zh-CN");
       const collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
       const statusLabels = { fresh: "已更新", partial: "部分更新", failed: "失败", pending: "待更新" };
-      const sourceLabels = { "extension-auto-sync": "扩展自动同步", "extension-export": "扩展导出", "csv-import": "CSV 导入" };
       const exclusionStorageKey = "pubspy.excludedDomains";
       const defaultExcludedDomains = [
         "google.com", "youtube.com", "mail.google.com", "x.com",
@@ -522,6 +551,7 @@
         return {
           id: index, domain, publisher, registered, traffic, rawTraffic, month, trafficChecked,
           registrationChecked, source, synced, status, trafficNumber,
+          registrationTime: Date.parse(registered),
           statusLabel: statusLabels[status] ?? status,
           domainKey: domainKey(domain),
           suffix: domain.slice(domain.lastIndexOf(".") + 1).toLowerCase(),
@@ -533,9 +563,8 @@
       const filters = byId("filters");
       const query = byId("query");
       const suffixFilter = byId("suffix");
-      const statusFilter = byId("status");
+      const registrationFilter = byId("registration-period");
       const trafficFilter = byId("traffic");
-      const sourceFilter = byId("source");
       const exclusionToggle = byId("toggle-exclusions");
       const exclusionPanel = byId("exclusions");
       const exclusionInput = byId("exclusion-domain");
@@ -624,7 +653,6 @@
         const statusCounts = countsBy("status");
         for (const [key, label] of Object.entries(statusLabels)) {
           const count = statusCounts.get(key) ?? 0;
-          statusFilter.add(new Option(label, key));
 
           if (count > 0) {
             const segment = node("span", undefined, "status-" + key);
@@ -640,9 +668,6 @@
         suffixes.sort(([first, firstCount], [second, secondCount]) => secondCount - firstCount || collator.compare(first, second));
         for (const [suffix, count] of suffixes) {
           suffixFilter.add(new Option("." + suffix + " · " + format.format(count), suffix));
-        }
-        for (const source of countsBy("source").keys()) {
-          sourceFilter.add(new Option(sourceLabels[source] ?? source, source));
         }
       }
 
@@ -776,21 +801,33 @@
         }
       }
 
+      function registrationRange(months) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        const day = today.getDate();
+        const startMonth = month - months;
+        const lastDayOfStartMonth = new Date(Date.UTC(year, startMonth + 1, 0)).getUTCDate();
+        return {
+          start: Date.UTC(year, startMonth, Math.min(day, lastDayOfStartMonth)),
+          end: Date.UTC(year, month, day),
+        };
+      }
+
       function applyFilters() {
         const keywords = query.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
         const suffix = suffixFilter.value;
-        const status = statusFilter.value;
+        const registrationMonths = Number(registrationFilter.value);
+        const dateRange = registrationMonths ? registrationRange(registrationMonths) : null;
         const traffic = trafficFilter.value;
-        const source = sourceFilter.value;
         matching = sorted.filter((record) =>
           !excludedDomains.has(record.domainKey) &&
           (!suffix || record.suffix === suffix) &&
-          (!status || record.status === status) &&
+          (!dateRange || (record.registrationTime >= dateRange.start && record.registrationTime <= dateRange.end)) &&
           (!traffic || (traffic === "positive" ? record.trafficNumber > 0 : record.trafficKind === traffic)) &&
-          (!source || record.source === source) &&
           keywords.every((word) => record.searchText.includes(word))
         );
-        byId("reset").disabled = !keywords.length && !suffix && !status && !traffic && !source;
+        byId("reset").disabled = !keywords.length && !suffix && !dateRange && !traffic;
         state.page = 1;
         renderPage();
       }
@@ -838,7 +875,7 @@
         if (!event.isComposing) applyFilters();
       });
       query.addEventListener("compositionend", applyFilters);
-      for (const filter of [suffixFilter, statusFilter, trafficFilter, sourceFilter]) {
+      for (const filter of [suffixFilter, registrationFilter, trafficFilter]) {
         filter.addEventListener("change", applyFilters);
       }
       previous.addEventListener("click", () => {
