@@ -378,8 +378,12 @@
     <section class="directory" aria-label="域名列表">
       <form id="filters" class="controls" role="search" aria-label="搜索和筛选域名">
         <div class="field search-field">
-          <label for="query">搜索</label>
-          <div class="search-box"><input type="search" id="query" placeholder="域名或发布商 ID" autocomplete="off" spellcheck="false"></div>
+          <label for="query">域名</label>
+          <div class="search-box"><input type="search" id="query" placeholder="例如 example.com" autocomplete="off" spellcheck="false"></div>
+        </div>
+        <div class="field search-field">
+          <label for="publisher-query">发布商 ID</label>
+          <div class="search-box"><input type="search" id="publisher-query" placeholder="例如 pub-123456…" autocomplete="off" spellcheck="false"></div>
         </div>
         <div class="field filter">
           <label for="suffix">域名后缀</label>
@@ -555,13 +559,13 @@
           statusLabel: statusLabels[status] ?? status,
           domainKey: domainKey(domain),
           suffix: domain.slice(domain.lastIndexOf(".") + 1).toLowerCase(),
-          searchText: (domain + " " + publisher).toLowerCase(),
           trafficKind: trafficKind(traffic, trafficNumber),
         };
       });
 
       const filters = byId("filters");
-      const query = byId("query");
+      const domainQuery = byId("query");
+      const publisherQuery = byId("publisher-query");
       const suffixFilter = byId("suffix");
       const registrationFilter = byId("registration-period");
       const trafficFilter = byId("traffic");
@@ -815,7 +819,8 @@
       }
 
       function applyFilters() {
-        const keywords = query.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+        const domainKeywords = domainQuery.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+        const publisherId = publisherQuery.value.trim().toLowerCase();
         const suffix = suffixFilter.value;
         const registrationMonths = Number(registrationFilter.value);
         const dateRange = registrationMonths ? registrationRange(registrationMonths) : null;
@@ -825,9 +830,10 @@
           (!suffix || record.suffix === suffix) &&
           (!dateRange || (record.registrationTime >= dateRange.start && record.registrationTime <= dateRange.end)) &&
           (!traffic || (traffic === "positive" ? record.trafficNumber > 0 : record.trafficKind === traffic)) &&
-          keywords.every((word) => record.searchText.includes(word))
+          domainKeywords.every((word) => record.domainKey.includes(word)) &&
+          (!publisherId || record.publisher.toLowerCase().includes(publisherId))
         );
-        byId("reset").disabled = !keywords.length && !suffix && !dateRange && !traffic;
+        byId("reset").disabled = !domainKeywords.length && !publisherId && !suffix && !dateRange && !traffic;
         state.page = 1;
         renderPage();
       }
@@ -848,7 +854,7 @@
       });
       filters.addEventListener("reset", () => {
         requestAnimationFrame(applyFilters);
-        query.focus();
+        domainQuery.focus();
       });
       exclusionToggle.addEventListener("click", () => {
         exclusionPanel.hidden = !exclusionPanel.hidden;
@@ -871,10 +877,12 @@
         }
         exclusionInput.focus();
       });
-      query.addEventListener("input", (event) => {
-        if (!event.isComposing) applyFilters();
-      });
-      query.addEventListener("compositionend", applyFilters);
+      for (const input of [domainQuery, publisherQuery]) {
+        input.addEventListener("input", (event) => {
+          if (!event.isComposing) applyFilters();
+        });
+        input.addEventListener("compositionend", applyFilters);
+      }
       for (const filter of [suffixFilter, registrationFilter, trafficFilter]) {
         filter.addEventListener("change", applyFilters);
       }
