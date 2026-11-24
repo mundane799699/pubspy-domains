@@ -211,31 +211,44 @@
     td { padding: 10px 15px; border-bottom: 1px solid #e9eee9; vertical-align: middle; height: 44px; }
     .record-row td:first-child { padding-left: 20px; }
     .record-row:hover > td, .record-row.expanded > td { background: #f1f7f1; }
-    .domain-button {
+    .domain-actions {
       display: flex;
-      max-width: 100%;
       align-items: center;
-      gap: 8px;
-      padding: 2px 0;
-      border: 0;
-      background: transparent;
-      text-align: left;
+      gap: 6px;
+    }
+    .domain-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       color: #215c43;
       font-weight: 690;
+      text-decoration: none;
+      text-underline-offset: 3px;
     }
-    .domain-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .domain-button:hover .domain-name { text-decoration: underline; text-underline-offset: 3px; }
-    .domain-button::after {
-      content: "";
-      width: 6px;
-      height: 6px;
+    .domain-name:hover, .domain-name:focus-visible { text-decoration: underline; }
+    .domain-toggle {
+      display: grid;
       flex: none;
-      margin: 0 4px 3px 1px;
-      border: solid #587a68;
-      border-width: 0 1.5px 1.5px 0;
-      transform: rotate(45deg);
+      place-items: center;
+      width: 28px;
+      height: 26px;
+      padding: 0;
+      border: 1px solid var(--strong-line);
+      border-radius: 5px;
+      background: var(--paper);
+      color: var(--accent);
     }
-    .domain-button[aria-expanded="true"]::after { transform: rotate(225deg); margin-top: 5px; }
+    .domain-toggle:hover, .domain-toggle[aria-expanded="true"] { background: #e2eee4; }
+    .domain-toggle::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border: solid currentColor;
+      border-width: 0 1.5px 1.5px 0;
+      transform: translateY(-2px) rotate(45deg);
+    }
+    .domain-toggle[aria-expanded="true"]::after { transform: translateY(2px) rotate(225deg); }
     .data { font: .875rem/1.4 var(--mono); white-space: nowrap; }
     .publisher { color: #3e5548; }
     .missing { color: var(--muted); }
@@ -695,18 +708,23 @@
         }
       }
 
+      function makeDomainLink(record, className) {
+        const link = node("a", record.domain, className);
+        link.href = "https://" + record.domainKey;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        return link;
+      }
+
       function makeDetails(record) {
         const row = node("tr", undefined, "details-row");
+        row.id = "details-" + record.id;
         const cell = node("td");
         cell.colSpan = 6;
         const details = node("dl", undefined, "details");
         const domainField = node("div", undefined, "details-domain");
         const domainValue = node("dd");
-        const link = node("a", record.domain);
-        link.href = "https://" + record.domainKey;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        domainValue.append(link);
+        domainValue.append(makeDomainLink(record));
         domainField.append(node("dt", "完整域名"), domainValue);
         details.append(domainField);
 
@@ -731,6 +749,7 @@
         const shouldOpen = openDetails?.button !== button;
         if (openDetails) {
           openDetails.button.setAttribute("aria-expanded", "false");
+          openDetails.button.removeAttribute("aria-controls");
           openDetails.row.classList.remove("expanded");
           openDetails.details.remove();
           openDetails = null;
@@ -740,6 +759,7 @@
           row.after(details);
           row.classList.add("expanded");
           button.setAttribute("aria-expanded", "true");
+          button.setAttribute("aria-controls", details.id);
           openDetails = { row, details, button };
         }
       }
@@ -747,13 +767,16 @@
       function makeRow(record) {
         const row = node("tr", undefined, "record-row");
         const domainCell = node("td");
-        const domainButton = node("button", undefined, "domain-button");
-        domainButton.type = "button";
-        domainButton.title = record.domain;
-        domainButton.setAttribute("aria-expanded", "false");
-        domainButton.append(node("span", record.domain, "domain-name"));
-        domainButton.addEventListener("click", () => toggleDetails(record, row, domainButton));
-        domainCell.append(domainButton);
+        const domainActions = node("div", undefined, "domain-actions");
+        const domainLink = makeDomainLink(record, "domain-name");
+        domainLink.title = record.domain;
+        const detailsButton = node("button", undefined, "domain-toggle");
+        detailsButton.type = "button";
+        detailsButton.setAttribute("aria-label", "查看 " + record.domain + " 的详情");
+        detailsButton.setAttribute("aria-expanded", "false");
+        detailsButton.addEventListener("click", () => toggleDetails(record, row, detailsButton));
+        domainActions.append(domainLink, detailsButton);
+        domainCell.append(domainActions);
 
         const trafficStyle = record.trafficKind === "error" ? "data traffic-error" : "data";
         const statusCell = node("td");
